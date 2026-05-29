@@ -30,7 +30,7 @@ But why should I write one?
 
 ---
 
-I gone back and forth 100 times about whether to start writing.
+I've gone back and forth 100 times on whether to start writing.
 
 *On the positive*, writing concentrates your thoughts from a crazy mess into a structured stream of words. It closes out little side projects with what feels like a solid conclusion. In encourages you to take a task to satisfying end. It hones a skill that’s going dull in these LLM days.
 
