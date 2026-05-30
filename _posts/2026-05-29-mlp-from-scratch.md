@@ -12,7 +12,7 @@ date: 2026-05-29
 
 ---
 
-What surprised me most when implementing a neural network from scratch was how simple the fundamental idea behind deep learning - that is, the trivial form of a fully connected, feed-forward vanilla neural net - really is. And seeing we're talking about what's been called the most important technical revolution in the last quarter century, I'd say that feels exciting!
+What surprised me most when implementing a neural network from scratch was how simple the fundamental idea behind deep learning - that is, the trivial form of a fully connected, feed-forward vanilla neural net - really is. And seeing as we're talking about what's been called the most important technical revolution in the last quarter century, I'd say that feels exciting!
 
 I will skip the general motivation and basic overview for machine learning because: A) it's damn hard to do (try it); B) others way more capable have done it - see [3Blue1Brown's video](https://www.youtube.com/watch?v=aircAruvnKk); and C) if any particular section trips you up, you can get a personalized answer from any LLM for that specific part.
 
@@ -22,7 +22,7 @@ Let’s get to it.
 
 We’ll start where everyone starts in machine learning: recognizing hand-written digits. Given the large variation of what a handwritten digit could look like, it's hard to imagine any form of if-else logic that you use to come up with a good recognition system.
 
-For that, we’ll be using the [MNIST](https://en.wikipedia.org/wiki/MNIST_database) dataset, consisting of 70'000 grayscale 28x28 pixel images of handwritten digits (0-9). It’s widely used because it’s simple enough to train on quickly, but also complex enough that you’ll want to start looking into using more advances techniques. It’s the 'hello world' of machine learning and yet it requires the latest to get >99% accuracy.
+For that, we’ll be using the [MNIST](https://en.wikipedia.org/wiki/MNIST_database) dataset, consisting of 70'000 grayscale 28x28 pixel images of handwritten digits (0-9). It’s widely used because it’s simple enough to train on quickly, but also complex enough that you’ll want to start looking into using more advanced techniques. It’s the 'hello world' of machine learning and yet it requires the latest techniques to get >99% accuracy.
 
 I’ll be skipping the code for loading the data in the post, but will provide it in the published code.
 
@@ -34,11 +34,11 @@ The image below shows what that looks like, but it only shows the connections fr
 
 ![Basic 4 layer MLP](/assets/images/mlp-from-scratch/mlpbasic-architecture.png)
 
-For our architecture, we’ll be using 784 input neurons (mapping directly from the 28x28 pixel grid), feeding to a first hidden layer of 128 neurons, then to a second hidden layer of 16 neurons, and finally finishing in an output layer of 10 neurons, one per digit.
+For our architecture, we’ll be using 784 input neurons (mapping directly from the 28x28 pixel grid), feeding to a first hidden layer of 128 neurons, then to a second hidden layer of 64 neurons, and finally finishing in an output layer of 10 neurons, one per digit.
 
 There are many other network architectures we could use - and specifically for image recognition we should be using convolutions - but let’s keep it simple for our first end-to-end example.
 
-Being a little bit more specific, we will be combining linearities and non-linearities (as an activation function) per layer. You’ll see exactly what happen in each neuron a little later.
+Being a little bit more specific, we will be combining linearities and non-linearities (as an activation function) per layer. You’ll see exactly what happens in each neuron a little later.
 
 Let’s get to some code.
 
@@ -119,7 +119,7 @@ Matrix relu(const Matrix &m) {
 //   Matrix a = relu(z);
 ```
 
-This works for all but the non-linearity in the last layer.  We need to turn our logits (the values of our last layer before they're a probability) into a probability distribution so that they are all positive and sum to 1, which is were the ["softmax"](https://en.wikipedia.org/wiki/Softmax_function) function comes into play. This lets us know what our model is currently predicting for a given input.
+This works for all but the non-linearity in the last layer.  We need to turn our logits (the values of our last layer before they're a probability) into a probability distribution so that they are all positive and sum to 1, which is where the ["softmax"](https://en.wikipedia.org/wiki/Softmax_function) function comes into play. This lets us know what our model is currently predicting for a given input.
 
 ```cpp
 Matrix softmax(const Matrix &mIn) {
@@ -163,7 +163,7 @@ The system wouldn’t be very interesting if all we did was a forward pass with 
 
 Going through the forward pass gives us a prediction. We now need a number that expresses the loss of the model (the **loss function** or **cost function**), and then we use the backwards pass to figure out how much each weight contributed to that loss in order to minimize it.
 
-We use [cross-entropy](https://en.wikipedia.org/wiki/Cross-entropy) loss, which quantifies the difference between the model’s prediction probability distribution and the true labels. And seeing as we are dealing with a single-label classification model - the true class has a probability of 1, all others are 0 - the math becomes easy ([this post](https://towardsdatascience.com/cross-entropy-demystified-f0886a64883f/) is explains it).
+We use [cross-entropy](https://en.wikipedia.org/wiki/Cross-entropy) loss, which quantifies the difference between the model’s prediction probability distribution and the true labels. And seeing as we are dealing with a single-label classification model - the true class has a probability of 1, all others are 0 - the math becomes easy ([this post](https://towardsdatascience.com/cross-entropy-demystified-f0886a64883f/) explains it).
 
 ```cpp
 float crossentropySingle(std::vector<float> predictions, int indexOfCorrectClass) {
@@ -195,7 +195,7 @@ This mechanism is **backpropagation**, where the key insight is that each layer 
 
 Each of the gradient components can be calculated as follows:
 
-| Seed gradient / the starting loss| this is 1 (`∂L/∂L`). Cross-entropy + softmax combine to simplify it to `p - y` (predicted possibility minus true label).|
+| Seed gradient / the starting loss| this is 1 (`∂L/∂L`). Cross-entropy + softmax combine to simplify it to `p - y` (predicted probability minus true label).|
 | ReLU| either 1 or 0. If `z > 0` during the forward pass, the gradient passes through unchanged. If `z ≤ 0` the gradient is zero’d, as the neuron contributed nothing.|
 | Weights| `∂L/∂W = δ · xᵀ`  - incoming signal times the input.|
 | Biases| `∂L/∂b = δ`  - incoming signal directly.|
@@ -266,17 +266,17 @@ Matrix relugrad(const Matrix &z) {
 
 ## Loading the data
 
-Remember the following about matrix operations: `MxK @ KxN = MxN`. Or in words, in order to multiple matrix A by matrix B, matrix A’s column count needs to match matrix B’s row count.
+Remember the following about matrix operations: `MxK @ KxN = MxN`. Or in words, in order to multiply matrix A by matrix B, matrix A’s column count needs to match matrix B’s row count.
 
 Our weights in layer 1 go from 784 to 128, meaning we have a matrix of size 784x128. Taking a single input image means we have a matrix of size 1x784, and the output of layer 1 would result in a matrix of 1x128. However, if we were to process 8 input images, we go from 8x784 → 784x128 → 8x128.
 
-This is pretty basic linear algebra, but it’s also pretty amazing to show how your architecture is flexible to the number of input images if can process in a batch.
+This is pretty basic linear algebra, but it’s also pretty amazing to show how your architecture is flexible to the number of input images it can process in a batch.
 
 Knowing that, we’re going to now write some code that starts putting everything together. We’ll be doing the following:
 
 1. Load the image data and associated correct labels into a Matrix (1 row per image) and a vector (one value per correct class of the image).
 2. Set up a for loop that iterates over however many epochs we want. A single epoch means we process all the training data once.
-3. Within each epoch, we will process a batch of samples / images instead of an individual one. This helps with computation speed, getting better gradient estimates and getting better generalization (our batches are random, introducing enough randomness to help the optimizer escape local minima - this is what is mean by Stochastic Gradient Descent or SGD).
+3. Within each epoch, we will process a batch of samples / images instead of an individual one. This helps with computation speed, getting better gradient estimates and getting better generalization (our batches are random, introducing enough randomness to help the optimizer escape local minima). Processing the entire dataset before taking a step would be classic gradient descent, processing a single image is Stochastic Gradient Descent (SGD), and mini-batch SGD is the happy middle ground which processes a few images per step.
 
 ```cpp
 // data (x) stored in a single matrix (one row == 1 image)
@@ -331,7 +331,7 @@ We’re getting close to having everything in place. We have the matrix, helper 
 For the actual neural net definition, we just need to set up the weights and biases matrices. We will also need caches for the pre-activations and the activations for the forward + backwards passes.
 
 ```cpp
-  // nn architecture: 784 -> 128 -> 16 -> 10
+  // nn architecture: 784 -> 128 -> 64 -> 10
   Matrix weights1(784, 128);
   Matrix weights2(128, 64);
   Matrix weights3(64, 10);
@@ -407,15 +407,15 @@ And that’s it! While some of the functions aren’t quite trivial, I find that
 
 I will warn you: this code is slow. Painfully slow. Add a printf for the loss calculation of each batch to see that you can’t process more than a handful each second. A single epoch on my MacBook Pro (M3 Max 40 GPU) takes roughly 1 minute. So there’s lots of room for understanding why things go so much faster if you just use PyTorch out of the box, regardless of whether using the CPU, MLX or CUDA implementation.
 
-Check out the full code [here](https://codeberg.org/markuzo/mlfun/src/branch/main/basic-mlp). You’ll need this for all the loading code for MNIST, and for anything else I for to mention in this post.
+Check out the full code [here](https://codeberg.org/markuzo/mlfun/src/branch/main/basic-mlp). You’ll need this for all the MNIST and data loading, and for anything else I forgot to mention in this post.
 
 ## Some closing thoughts
 
-This code only goes through the training process - I probably should have mentioned this much sooner - and we would need a few things here to move something more reusable: serialization of the weights + biases so that you can load them after training; implementing metrics for accuracy, confusion matrix (which digits get confused with which other digits), per-class accuracy; a simple `main()` that does a simple forward pass on a single image.
+This code only goes through the training process - I probably should have mentioned this much sooner - and we would need a few things here to move to something more reusable: serialization of the weights + biases so that you can load them after training; implementing metrics for accuracy, confusion matrix (which digits get confused with which other digits), per-class accuracy; a simple `main()` that just does a forward pass on a single image.
 
 Some more quick fire points:
 
 - Seeing those nested loops for any of the matrix computation should make everyone’s neck hairs stand up, especially when you know that cache misses are happening all over the place when accessing things by column. This is the space I find most exciting, as it’s all just a huge learning ground for low-level hardware-specific optimization.
 - There are so many other types of linear transformations we could be using. Even just moving to CNNs dramatically improves the accuracy of the model. And there are so many more things to add.
 - The structure of the code is pretty explicit, but there’s something beautiful about how actual ML SDKs implement this. Plus it’s not a lot of work to have a class with a `forward()` and `backward()` function which abstracts everything away.
-- Going from this to modern LLMs is quite a jump, even without talking about the crazy scale behind the training process, or the number of parameters. However, looking at implementing attention mechanism with transformer in the same manner as this post is likely going to demystify the process.
+- Going from this to modern LLMs is quite a jump, even without talking about the crazy scale behind the training process, or the number of parameters they use. However, looking at implementing the attention mechanism with transformers in the same manner as this post is likely going to demystify the process.
